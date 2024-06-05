@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-rows: repeat(10, 65px);
+            grid-template-columns: repeat(10, 120px);
+            height: 90vh;
+            width: 80vw;
+        }
+
+        .cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid black;
+        }
+
+        .player {
+            height: 30px;
+            width: 30px;
+            border-radius: 50%;
+            background-color: blue;
+        }
+
+        .player1 {
+            height: 50px;
+            width: 50px;
+            border-radius: 50%;
+            background-color: green;
+        }
+
+        .player2 {
+            height: 30px;
+            width: 30px;
+            border-radius: 50%;
+            background-color: red;
+        }
+
+        .first {
+            width: 10%;
+            height: 100%;
+        }
+    </style>
+    <title>Snakes and Ladders</title>
+</head>
+
+<body>
+    <div class="first">
+        <div class="player"></div>
+        <div class="player2"></div>
+        <button onclick="btn()">Click</button>
+        <p id="diceValue">0</p>
+    </div>
+    <div class="board">
+        <!-- Cells will be created dynamically here -->
+    </div>
+
+    <script>
+        let rollingSound = new Audio('rpg-dice-rolling-95182.mp3');
+        let winSound = new Audio('winharpsichord-39642.mp3');
+
+        // Function to roll the dice
+        function rollDice() {
+            return Math.floor(Math.random() * 6) + 1;
+        }
+
+        // Object defining snakes and their positions
+        let snakes = {
+            20: 5,
+            99: 2,
+            40: 10,
+            80: 30,
+            75: 15,
+            3: 30,
+            10: 40,
+            25: 60,
+            45: 80,
+            80: 96
+        };
+
+        // Function to check if a cell is a snake's head
+        function isSnakeHead(position) {
+            return snakes.hasOwnProperty(position);
+        }
+
+        // Function to handle player movement
+        function movePlayer(playerClass, score) {
+            let currentPosition = document.querySelector(`.${playerClass}`).parentNode;
+            currentPosition.removeChild(currentPosition.firstChild); // Remove player from current position
+            let targetCell = document.querySelector(`.cell-${score}`);
+            targetCell.appendChild(document.createElement('div')).className = playerClass;
+        }
+
+        // Function to handle player turn
+        function handlePlayerTurn(playerClass) {
+            let dice = rollDice();
+            document.getElementById('diceValue').innerText = `${playerClass} rolled: ${dice}`;
+
+            let currentPlayerPosition = parseInt(document.querySelector(`.${playerClass}`).parentNode.dataset.position);
+            let newPosition = currentPlayerPosition + dice;
+
+            if (isSnakeHead(newPosition)) {
+                newPosition = snakes[newPosition]; // Move to the tail of the snake
+                console.log(`Oops, ${playerClass} landed on a snake's head at position ${newPosition}`);
+            }
+
+            if (newPosition > 100) {
+                console.log(`Can't move ${playerClass} beyond 100`);
+                return;
+            }
+
+            console.log(`${playerClass} moves to position ${newPosition}`);
+            movePlayer(playerClass, newPosition);
+
+            if (newPosition === 100) {
+                console.log(`${playerClass} wins!`);
+                winSound.play();
+                setTimeout(() => {
+                    alert(`${playerClass} won!`);
+                    location.reload();
+                }, 1000);
+            }
+        }
+
+        // Function to handle button click
+        function btn() {
+            rollingSound.play();
+            handlePlayerTurn('player');
+            setTimeout(() => handlePlayerTurn('player2'), 1000); // Delayed turn for player2
+        }
+
+        // Initialize the game board
+        let board = document.querySelector('.board');
+        let cells = '';
+        for (let i = 100; i >= 1; i--) {
+            let cell = `<div class="cell cell-${i}" data-position="${i}">${i}</div>`;
+            cells += cell;
+        }
+        board.innerHTML = cells;
+    </script>
+</body>
+
+</html>
